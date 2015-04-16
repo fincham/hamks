@@ -1,0 +1,24 @@
+#!/usr/bin/env python
+
+"""Hamster to TKS in one command."""
+
+import os
+import argparse
+import subprocess
+import tempfile
+import pty
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('-l', metavar="TIME", type=str, default='today', help='time specification for hamster2tks, defaults to today')
+    parser.add_argument('-c', action='store_true', help='if specified, commits the changes to WRMS')
+    args = parser.parse_args()
+
+    tks_file = tempfile.NamedTemporaryFile(delete=False)
+    tks_data = subprocess.check_output(['/usr/bin/hamster2tks' ,'--round=0.25', '-l', args.l])
+    tks_file.write(tks_data)
+    tks_file.close()
+
+    pty.spawn(['/usr/bin/tks', tks_file.name, '-c' if args.c else ''])
+
+    os.unlink(tks_file.name)
